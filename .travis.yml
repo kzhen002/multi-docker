@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t kzhen/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run kzhen/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t kzhen/multi-client ./client
+    - docker build -t kzhen/multi-nginx ./nginx
+    - docker build -t kzhen/multi-server ./server
+    - docker build -t kzhen/multi-worker ./worker
+    # Log in to Docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Push to docker hub
+    - docker push kzhen/multi-client
+    - docker push kzhen/multi-nginx
+    - docker push kzhen/multi-server
+    - docker push kzhen/multi-worker
